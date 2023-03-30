@@ -25,12 +25,16 @@ public class SetupListener implements Listener {
     private HashMap<UUID, Boolean> waiters;
     private HashMap<UUID, Arena> clickers;
     private HashMap<UUID, Inventory> invs;
-    private String action;
+    private HashMap<UUID, String> actions;
     private HashMap<UUID, Boolean> completers;
     private BlocksSumo plugin;
     public SetupListener(BlocksSumo plugin) {
         this.plugin = plugin;
         clickers = new HashMap<>();
+        waiters = new HashMap<>();
+        invs = new HashMap<>();
+        completers = new HashMap<>();
+        actions = new HashMap<>();
     }
 
     @EventHandler
@@ -38,8 +42,7 @@ public class SetupListener implements Listener {
         Player player = (Player) event.getWhoClicked();
         UUID id = player.getUniqueId();
         if (event.getClickedInventory().getName().equals("Arena Setup")) {
-            /*clicker = player.getUniqueId();
-            arena = arena == null ? new Arena(null, UUID.randomUUID()) : arena;*/
+
             if(!clickers.containsKey(id)) {
                 clickers.put(id, new Arena(null, UUID.randomUUID()));
             }
@@ -52,7 +55,8 @@ public class SetupListener implements Listener {
             ItemStack current = event.getCurrentItem();
 
             if (current != null && current.getItemMeta() != null) {
-                action = current.getItemMeta().getDisplayName();
+                //action = current.getItemMeta().getDisplayName();
+                actions.put(id, current.getItemMeta().getDisplayName());
 
                 if(!invs.containsKey(id)) {
                     invs.put(id, event.getClickedInventory());
@@ -63,7 +67,7 @@ public class SetupListener implements Listener {
                 }
                 Inventory inv = invs.get(id);
                 player.playSound(player.getLocation(), Sound.CLICK , 2 , 1);
-                switch (action) {
+                switch (actions.get(id)) {
                     case "Set Name":
                         waiters.put(id, true);
                         player.sendMessage("Please type the name of the arena");
@@ -125,7 +129,7 @@ public class SetupListener implements Listener {
             if(arena != null && inv != null && !complete) {
                 if (waitingChat) {
                     String message = event.getMessage();
-                    switch (action) {
+                    switch (actions.get(id)) {
                         case "Set Name":
                             if(!plugin.getArenaManager().exists(message.trim())) {
                                 arena.setName(message.trim());
