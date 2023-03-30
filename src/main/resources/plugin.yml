@@ -1,0 +1,7 @@
+name: BlocksSumo
+version: '${project.version}'
+main: me.mrdev.bs.BlocksSumo
+author: MrDev
+commands:
+  arena:
+    description: Arena command for blocks sumo!
