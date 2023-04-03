@@ -44,7 +44,8 @@ public class ChatListener implements Listener {
             event.setCancelled(true);
             return;
         }
-       plugin.getServer().broadcastMessage(player.getName() + " >> " + event.getMessage());
+        event.setCancelled(true);
+        plugin.getServer().broadcastMessage(player.getName() + " >> " + event.getMessage());
     }
 
 }
