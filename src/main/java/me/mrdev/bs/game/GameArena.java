@@ -2,13 +2,15 @@ package me.mrdev.bs.game;
 
 import me.mrdev.bs.BlocksSumo;
 import me.mrdev.bs.arena.Arena;
-import me.mrdev.bs.events.GamePlayerDeath;
+import me.mrdev.bs.arena.ArenaState;
+import me.mrdev.bs.events.GamePlayerDeathEvent;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -22,13 +24,15 @@ public class GameArena extends Arena {
     }
 
     public void prepareSpawns() {
-        ChatColor[] validColors = Arrays.stream(ChatColor.values())
-                .filter(c -> c != ChatColor.ITALIC  || c != ChatColor.MAGIC || c != ChatColor.BOLD || c != ChatColor.RESET)
-                .toArray(ChatColor[]::new);
-        ArrayList<Location> spawns = getSpawns();
+       List<ChatColor> validColors = Arrays.stream(ChatColor.values())
+                .filter(c -> c != ChatColor.ITALIC  && c != ChatColor.MAGIC && c != ChatColor.BOLD && c != ChatColor.RESET && c != ChatColor.STRIKETHROUGH && c != ChatColor.UNDERLINE)
+                .collect(Collectors.toList());
+        ArrayList<Location> spawns = (ArrayList<Location>) getSpawns().clone();
         getPlayers().forEach(p -> {
             Player player = p.getPlayer();
-            p.setTeam(validColors[ThreadLocalRandom.current().nextInt(validColors.length)]);
+            ChatColor color = validColors.get(ThreadLocalRandom.current().nextInt(validColors.size()));
+            p.setTeam(color);
+            validColors.remove(color);
             Location location = spawns.get(ThreadLocalRandom.current().nextInt(spawns.size()));
             player.teleport(location);
             spawns.remove(location);
@@ -36,7 +40,7 @@ public class GameArena extends Arena {
             player.getInventory().clear();
             player.getInventory().addItem(new ItemStack(Material.WOOL , 64));
             player.getInventory().addItem(new ItemStack(Material.SHEARS));
-            player.playSound(player.getLocation(), Sound.ENDERMAN_TELEPORT , 2 , -1);
+            player.playSound(player.getLocation(), Sound.ENDERMAN_TELEPORT , 2 , 1);
         });
     }
 
@@ -47,7 +51,7 @@ public class GameArena extends Arena {
         player.removeLives(1);
         getSpectators().add(player);
         //plugin.getArenaManager().addArena(this , false);
-        plugin.getServer().getPluginManager().callEvent(new GamePlayerDeath(this , player.getPlayer()));
+        plugin.getServer().getPluginManager().callEvent(new GamePlayerDeathEvent(this , player.getPlayer()));
     }
 
     public void respawnSpectator(GamePlayer player) {
@@ -70,6 +74,9 @@ public class GameArena extends Arena {
             return getPlayers().stream()
                     .filter(p -> !isDead(p))
                     .findAny().orElse(null);
+        }
+        if(getAliveCount() == 0 && getPlayers().size() == 1) {
+            return getPlayers().get(0);
         }
         return null;
     }
@@ -97,9 +104,9 @@ public class GameArena extends Arena {
             Player player = p.getPlayer();
             player.getInventory().clear();
             player.teleport(player.getWorld().getSpawnLocation());//TODO: Add main lobby
-            player.setDisplayName(player.getName());
         });
         getPlayers().clear();
+        setState(ArenaState.WAITING);
     }
 
     public boolean isSpectator(GamePlayer player) {

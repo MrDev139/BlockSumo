@@ -30,9 +30,11 @@ public class DamageCheckTask extends TaskTimer {
             cancel();
         }
 
-        if(lastDamager != null || player.getLastDamager() != null && lastDamager.getUniqueId().equals(player.getLastDamager().getUniqueId())) {
-            plugin.getLogger().info(lastDamager.getName());
-        }else {
+        if(lastDamager == null || player.getLastDamager() == null) {
+           cancel();
+        }
+
+        if(!lastDamager.getUniqueId().equals(player.getLastDamager().getUniqueId())) {
             cancel();
         }
 

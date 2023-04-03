@@ -1,20 +1,19 @@
 package me.mrdev.bs.events;
 
-import me.mrdev.bs.arena.Arena;
 import me.mrdev.bs.game.GameArena;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 
-public class GamePlayerDeath extends Event {
+public class GamePlayerDeathEvent extends Event {
 
     private static final HandlerList handlerList = new HandlerList();
     private GameArena arena;
 
     private Player spectator;
 
-    public GamePlayerDeath(GameArena arena , Player spectator) {
+    public GamePlayerDeathEvent(GameArena arena , Player spectator) {
         this.arena = arena;
         this.spectator = spectator;
     }

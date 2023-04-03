@@ -2,10 +2,11 @@ package me.mrdev.bs;
 
 import me.mrdev.bs.arena.ArenaManager;
 import me.mrdev.bs.arena.data.ArenaYamlManager;
-import me.mrdev.bs.commands.ArenaCommand;
+import me.mrdev.bs.commands.ArenaBaseCommand;
 import me.mrdev.bs.config.ArenaFile;
 import me.mrdev.bs.listeners.*;
 import me.mrdev.bs.utils.SumoUtils;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class BlocksSumo extends JavaPlugin {
@@ -24,13 +25,15 @@ public final class BlocksSumo extends JavaPlugin {
         getLogger().info("Successfully loaded two yaml files");
         Ymlmanager = new ArenaYamlManager(this);
         arenaManager = new ArenaManager(this);
-        getServer().getPluginManager().registerEvents(new WoolListener(this),this);
-        getServer().getPluginManager().registerEvents(new SetupListener(this),this);
-        getServer().getPluginManager().registerEvents(new JoinListener(this),this);
-        getServer().getPluginManager().registerEvents(new DamageListener(this),this);
-        getServer().getPluginManager().registerEvents(new GameListener(this) , this);
-        getServer().getPluginManager().registerEvents(new WorldListener(this) , this);
-        getCommand("arena").setExecutor(new ArenaCommand(this));
+        PluginManager manager = getServer().getPluginManager();
+        manager.registerEvents(new WoolListener(this),this);
+        manager.registerEvents(new SetupListener(this),this);
+        manager.registerEvents(new JoinListener(this),this);
+        manager.registerEvents(new DamageListener(this),this);
+        manager.registerEvents(new GameListener(this) , this);
+        manager.registerEvents(new WorldListener(this) , this);
+        manager.registerEvents(new ChatListener(this), this);
+        getCommand("arena").setExecutor(new ArenaBaseCommand(this));
     }
 
     @Override

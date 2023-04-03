@@ -34,10 +34,7 @@ public class EndingTask extends TaskTimer{
     @Override
     public void execute() {
         if(time == 0) {
-            //plugin.getArenaManager().removeArena(arena , false);
             arena.clearPlayers();
-            arena.setState(ArenaState.WAITING);
-            //plugin.getArenaManager().addArena(arena , false);
             cancel();
         }else {
             Player winner = new GameArena(plugin , arena).getLastStanding().getPlayer();

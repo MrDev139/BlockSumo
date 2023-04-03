@@ -2,6 +2,7 @@ package me.mrdev.bs.listeners;
 
 import me.mrdev.bs.BlocksSumo;
 import me.mrdev.bs.arena.Arena;
+import me.mrdev.bs.utils.SumoUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Sound;
@@ -22,11 +23,11 @@ import java.util.*;
 
 public class SetupListener implements Listener {
 
-    private HashMap<UUID, Boolean> waiters;
-    private HashMap<UUID, Arena> clickers;
-    private HashMap<UUID, Inventory> invs;
-    private HashMap<UUID, String> actions;
-    private HashMap<UUID, Boolean> completers;
+    private HashMap<UUID, Boolean> waiters; //waitingChat
+    private HashMap<UUID, Arena> clickers; //arena
+    private HashMap<UUID, Inventory> invs; //inventories
+    private HashMap<UUID, String> actions; //actions
+    private HashMap<UUID, Boolean> completers; //not that necessary
     private BlocksSumo plugin;
     public SetupListener(BlocksSumo plugin) {
         this.plugin = plugin;
@@ -65,6 +66,7 @@ public class SetupListener implements Listener {
                 if(!waiters.containsKey(id)) {
                     waiters.put(id, false);
                 }
+
                 Inventory inv = invs.get(id);
                 player.playSound(player.getLocation(), Sound.CLICK , 2 , 1);
                 switch (actions.get(id)) {
@@ -97,10 +99,16 @@ public class SetupListener implements Listener {
                             waiters.put(id, true);
                             player.sendMessage("Please go to where you want to set the spectator location and send in chat \"Done\"");
                             player.closeInventory();
+                            break;
+                        case "Set Lives":
+                            waiters.put(id, true);
+                            player.sendMessage("Please enter the lives amount for the arena");
+                            player.closeInventory();
+                            break;
                         case "Save Arena":
                                 if (!isArenaComplete(arena)) {
                                     player.playSound(player.getLocation(), Sound.VILLAGER_NO, 1, 2);
-                                    addNote(inv, 16, ChatColor.DARK_PURPLE + "Setup not complete!");
+                                    addNote(inv, DyeColor.RED, 16, ChatColor.DARK_PURPLE + "Setup not complete!");
                                     break;
                                 }
                             player.sendMessage("Saving the arena...");
@@ -133,7 +141,9 @@ public class SetupListener implements Listener {
                         case "Set Name":
                             if(!plugin.getArenaManager().exists(message.trim())) {
                                 arena.setName(message.trim());
-                                addNote(inv,10, "Current name: " + arena.getName());
+                                addNote(inv,DyeColor.GREEN, 10, "Current name: " + arena.getName());
+                            }else if(isBeingSetup(message.trim())) {
+                                player.sendMessage(message.trim() + " is being setup by another player!");
                             }else {
                                 player.sendMessage(message.trim() + " already exists!!");
                             }
@@ -144,38 +154,52 @@ public class SetupListener implements Listener {
                                 player.sendMessage("Invalid number! Try Again");
                             }else {
                                 int min = Integer.parseInt(message);
+                                if(min <= 0) {
+                                    player.sendMessage("Min amount must be bigger than zero!");
+                                    waiters.put(id, false);
+                                    break;
+                                }
                                 if(arena.getMax() != 0 && min > arena.getMax()) {
                                     player.sendMessage("Min amount can't be bigger than Max amount! Please try again!!");
-                                }else {
+                                    waiters.put(id , false);
+                                    break;
+                                }
                                     arena.setMin(min);
-                                    addNote(inv, 11, "Current min: " + arena.getMin());
-                                    }
+                                    addNote(inv,DyeColor.GREEN, 11, "Current min: " + arena.getMin());
                                 }
                             waiters.put(id, false);
                             break;
                         case "Set Max":
                             if(!plugin.getSumoUtils().getMathUtils().isInteger(message)) {
                                 player.sendMessage("Invalid number! Try Again");
-                            }else {
-                                int max = Integer.parseInt(message);
-                                if(max >= arena.getMin()) {
-                                    arena.setMax(max);
-                                    addNote(inv, 12, "Current Max: " + arena.getMax());
-                                }else {
-                                    player.sendMessage("Max can't be smaller than arena's min!! Try again!");
-                                }
+                                waiters.put(id, false);
+                                break;
                             }
-                            waiters.put(id, false);
-                            break;
+                                int max = Integer.parseInt(message);
+                                if(max <= 0) {
+                                    player.sendMessage("max must be bigger than 0, TRY AGAIN!");
+                                    waiters.put(id, false);
+                                    break;
+                                }
+
+                                if(max < arena.getMin()) {
+                                    player.sendMessage("Max can't be smaller than arena's min!! Try again!");
+                                    waiters.put(id, false);
+                                    break;
+                                }
+                                arena.setMax(max);
+                                addNote(inv,DyeColor.GREEN, 12, "Current Max: " + arena.getMax());
+                                waiters.put(id, false);
+                                break;
                         case "Add Spawn":
-                            if(message.equals("Done")) {
+                            if(message.equalsIgnoreCase("Done")) {
                                     if(arena.getSpawns() == null) {
                                         arena.setSpawns(new ArrayList<>());
                                     }
                                     arena.getSpawns().add(player.getLocation()); //i have to get the correct size for comparison with the max
                                     if (arena.getSpawns().size() <= arena.getMax()) {
                                         DyeColor color = arena.getSpawns().size() >= arena.getMax() ? DyeColor.GREEN : DyeColor.YELLOW;
-                                        addNote(inv, new Wool(color).toItemStack(1), 13, "Added Spawns: " + arena.getSpawns().size());
+                                        addNote(inv, color, 13, "Added Spawns: " + arena.getSpawns().size());
                                     } else {
                                         arena.getSpawns().remove(player.getLocation());
                                         player.sendMessage("Max amount of spawns reached!! you can increase it by increasing the max amount of players!!");
@@ -186,21 +210,36 @@ public class SetupListener implements Listener {
                             waiters.put(id, false);
                             break;
                         case "Set Lobby":
-                            if(message.equals("Done")) {
+                            if(message.equalsIgnoreCase("Done")) {
                                 arena.setLobby(player.getLocation());
-                                addNote(inv, 14, "Lobby is set");
+                                addNote(inv,DyeColor.GREEN, 14, "Lobby is set");
                             }else {
                                 player.sendMessage("Invalid message! Try again");
                             }
                             waiters.put(id, false);
                             break;
                         case "Set Spectator Spawn":
-                            if(message.equals("Done")) {
+                            if(message.equalsIgnoreCase("Done")) {
                                 arena.setSpectatorloc(player.getLocation());
-                                addNote(inv, 15, "Spectator location is set");
+                                addNote(inv,DyeColor.GREEN, 15, "Spectator location is set");
                             }else {
                                 player.sendMessage("Invalid message! Try again");
                             }
+                            waiters.put(id, false);
+                            break;
+                        case "Set Lives":
+                            if(!plugin.getSumoUtils().getMathUtils().isInteger(message)) {
+                                player.sendMessage("Invalid number! Try again!");
+                                break;
+                            }
+                            int lives = Integer.parseInt(message);
+                            if(lives <= 0) {
+                                player.sendMessage("Invalid amount of lives! it must be bigger than 0");
+                                waiters.put(id, false);
+                                break;
+                            }
+                            arena.setLives(lives);
+                            addNote(inv, DyeColor.GREEN, 4, ChatColor.DARK_PURPLE + "Current lives " + arena.getLives());
                             waiters.put(id, false);
                             break;
                     }
@@ -237,22 +276,19 @@ public class SetupListener implements Listener {
     }
 
     private boolean isArenaComplete(Arena arena) {
-        return arena.getName() != null && arena.getMin() != 0 && arena.getMax() != 0 && !arena.getSpawns().isEmpty() && arena.getLobby() != null && arena.getSpectatorloc() != null;
+        return arena.getName() != null && arena.getMin() != 0 && arena.getMax() != 0 && arena.getLives() != 0 && !arena.getSpawns().isEmpty() && arena.getLobby() != null && arena.getSpectatorloc() != null;
     }
 
-    private void addNote(Inventory inv, int slot, String... notes) {
-        ItemStack item = new Wool(DyeColor.GREEN).toItemStack(1);
+    private void addNote(Inventory inv, DyeColor color, int slot, String... notes) {
+        ItemStack item = new Wool(color).toItemStack(1);
         ItemMeta meta = inv.getItem(slot).getItemMeta();;
         meta.setLore(Arrays.asList(notes));
         item.setItemMeta(meta);
         inv.setItem(slot , item);
     }
 
-    private void addNote(Inventory inv, ItemStack invItem, int slot, String... notes) {
-        ItemMeta meta = inv.getItem(slot).getItemMeta();
-        meta.setLore(Arrays.asList(notes));
-        invItem.setItemMeta(meta);
-        inv.setItem(slot, invItem);
+    private boolean isBeingSetup(String name) {
+        return clickers.values().stream().anyMatch(a -> a.getName() != null && a.getName().equalsIgnoreCase(name));
     }
 
     private void cancel(UUID id) {

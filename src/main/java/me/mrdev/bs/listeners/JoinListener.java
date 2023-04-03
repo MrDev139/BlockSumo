@@ -54,12 +54,10 @@ public class JoinListener implements Listener {
         Player player = event.getPlayer();
         if(manager.isPlayerInArena(player)) {
             GameArena arena = new GameArena(plugin , plugin.getArenaManager().getPlayerArena(player));
-            //plugin.getArenaManager().removeArena(arena , false);
             if(arena.isSpectator(arena.getGamePlayer(player))) {
                 arena.getSpectators().remove(arena.getGamePlayer(player));
             }
             arena.getPlayers().remove(arena.getGamePlayer(player));
-            //plugin.getArenaManager().addArena(arena , false);
             plugin.getServer().getPluginManager().callEvent(new ArenaLeaveEvent(player, arena , true));
         }
     }

@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
 
 public class WorldListener implements Listener {
 
@@ -17,14 +18,18 @@ public class WorldListener implements Listener {
 
     @EventHandler
     public void onSpawn(EntitySpawnEvent event) {
-        if(!(event.getEntity() instanceof Player)) {
-            event.setCancelled(true);
-        }
+        if(!(event.getEntity() instanceof Player)) event.setCancelled(true);
     }
 
     @EventHandler
     public void onHunger(FoodLevelChangeEvent event) {
         event.setCancelled(true);
     }
+
+    @EventHandler
+    public void onWeather(WeatherChangeEvent event) {
+        event.setCancelled(true);
+    }
+
 
 }

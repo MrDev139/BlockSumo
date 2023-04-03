@@ -41,6 +41,9 @@ public class InventoryUtils {
                 case 16:
                     meta.setDisplayName("Save Arena");
                     break;
+                case 4:
+                    meta.setDisplayName("Set Lives");
+                    break;
                 default:
                     item = new ItemStack(Material.STAINED_GLASS_PANE);
                     meta.setDisplayName(" ");

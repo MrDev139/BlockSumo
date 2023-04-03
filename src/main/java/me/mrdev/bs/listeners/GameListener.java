@@ -5,7 +5,7 @@ import me.mrdev.bs.arena.Arena;
 import me.mrdev.bs.arena.ArenaState;
 import me.mrdev.bs.events.ArenaEndEvent;
 import me.mrdev.bs.events.ArenaStartEvent;
-import me.mrdev.bs.events.GamePlayerDeath;
+import me.mrdev.bs.events.GamePlayerDeathEvent;
 import me.mrdev.bs.game.GameArena;
 import me.mrdev.bs.game.GamePlayer;
 import me.mrdev.bs.game.tasks.EndingTask;
@@ -40,14 +40,12 @@ public class GameListener implements Listener {
             p.sendMessage(event.getWinner().getName() + " Has won the game!!");
             p.sendTitle( "GAME OVER" , "Thanks for testing my plugin");
         });
-        //plugin.getArenaManager().removeArena(arena , false);
         arena.setState(ArenaState.ENDING);
-        //plugin.getArenaManager().addArena(arena , false);
         new EndingTask(plugin , arena , 5).start();
     }
 
     @EventHandler
-    public void onDeath(GamePlayerDeath event) {
+    public void onDeath(GamePlayerDeathEvent event) {
         Player player = event.getSpectator();
         GameArena arena = event.getArena();
         GamePlayer p = arena.getGamePlayer(player);
@@ -69,6 +67,9 @@ public class GameListener implements Listener {
            new RespawnTask(plugin , player , 5 ).start();
         }
         if(arena.getAliveCount() == 1) {
+            plugin.getServer().getPluginManager().callEvent(new ArenaEndEvent(arena , arena.getLastStanding().getPlayer()));
+        }
+        if(arena.getAliveCount() == 0 && arena.getPlayers().size() == 1) {
             plugin.getServer().getPluginManager().callEvent(new ArenaEndEvent(arena , arena.getLastStanding().getPlayer()));
         }
     }

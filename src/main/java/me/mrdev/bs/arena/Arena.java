@@ -19,7 +19,7 @@ public class Arena implements Cloneable {
     private ArrayList<Location> spawns; //save
     private Location lobby; //save
     private Location spectatorloc; //save
-    private int lives;
+    private int lives; //save
 
     private ArenaState state = ArenaState.WAITING;
 
@@ -148,6 +148,7 @@ public class Arena implements Cloneable {
     public GamePlayer getGamePlayer(UUID id) {
         return players.stream().filter(p -> p.getPlayer().getUniqueId() == id).findAny().orElse(null);
     }
+
 
     @Override
     public Arena clone() throws CloneNotSupportedException {

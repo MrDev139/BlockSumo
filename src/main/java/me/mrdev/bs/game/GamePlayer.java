@@ -57,7 +57,6 @@ public class GamePlayer {
 
     public void setTeam(ChatColor team) {
         this.team = team;
-        player.setDisplayName(team + player.getName());
     }
 
     public Player getLastDamager() {
