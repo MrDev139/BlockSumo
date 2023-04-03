@@ -16,18 +16,17 @@ public class ArenaBaseCommand implements CommandExecutor {
 
     private BlocksSumo plugin;
     private ArenaManager manager;
-    private ArrayList<SubCommand<CommandSender>> subCommands = new ArrayList<>();
-    private ArrayList<SubCommand<Player>> playerSubCommands = new ArrayList<>();
+    private ArrayList<SubCommand<? extends CommandSender>> subCommands = new ArrayList<>();
 
     public ArenaBaseCommand(BlocksSumo plugin) {
         this.plugin = plugin;
         this.manager = plugin.getArenaManager();
-        playerSubCommands.add(new JoinCommand(plugin));
-        playerSubCommands.add(new LeaveCommand(plugin));
+        subCommands.add(new JoinCommand(plugin));
+        subCommands.add(new LeaveCommand(plugin));
         subCommands.add(new ListCommand(plugin));
         subCommands.add(new InfoCommand(plugin));
-        playerSubCommands.add(new ModifyCommand(plugin));
-        playerSubCommands.add(new SetupCommand(plugin));
+        subCommands.add(new ModifyCommand(plugin));
+        subCommands.add(new SetupCommand(plugin));
     }
 
     @Override
@@ -39,21 +38,22 @@ public class ArenaBaseCommand implements CommandExecutor {
         }
 
         String subStr = args[0];
-        SubCommand<CommandSender> subCmd = subCommands.stream().filter(sub -> sub.getName().equalsIgnoreCase(subStr)).findAny().orElse(null);
-        SubCommand<Player> playerSubCmd = playerSubCommands.stream().filter(sub -> sub.getName().equalsIgnoreCase(subStr)).findAny().orElse(null);
-
-        if(playerSubCmd != null) {
-            if(!(sender instanceof Player)) {
-                sender.sendMessage("Hey this command is only for players!");
-                return true;
-            }
-            playerSubCmd.execute((Player) sender, Arrays.copyOfRange(args, 1, args.length));
-            return true;
-        }
+        SubCommand<? extends CommandSender> subCmd = subCommands.stream().filter(sub -> sub.getName().equalsIgnoreCase(subStr)).findAny().orElse(null);
 
         if(subCmd != null) {
-            subCmd.execute(sender, Arrays.copyOfRange(args, 1, args.length));
-            return true;
+            ParameterizedType type = (ParameterizedType) subCmd.getClass().getGenericSuperclass();
+            if(type.getActualTypeArguments()[0] == Player.class) {
+                SubCommand<Player> subPlayer = (SubCommand<Player>) subCmd;
+                if(!(sender instanceof Player)) {
+                    sender.sendMessage(subCmd.getName() + " cmd is only for players!");
+                    return true;
+                }
+                subPlayer.execute((Player) sender, Arrays.copyOfRange(args, 1, args.length));
+                return true;
+            }
+            SubCommand<CommandSender> subSender = (SubCommand<CommandSender>) subCmd;
+            subSender.execute(sender, Arrays.copyOfRange(args, 1, args.length));
+           return true;
         }
 
         sender.sendMessage("Invalid subCommand!");
